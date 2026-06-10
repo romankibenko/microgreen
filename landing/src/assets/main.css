@@ -1,0 +1,29 @@
+:root {
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+  --color-ink: #1c2419;
+  --color-cream: #f6f3ea;
+  --color-forest: #1f3d2b;
+  --color-lime: #9bcf3f;
+}
+
+html,
+body {
+  margin: 0;
+  background-color: var(--color-cream);
+}
+
+/* Vuetify по умолчанию ставит Roboto — уводим типографику в ботанический стиль */
+.v-application {
+  font-family: var(--font-body);
+}
+
+.font-display {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  letter-spacing: -0.01em;
+}
+
+.text-balance {
+  text-wrap: balance;
+}

@@ -20,6 +20,7 @@ node_modules/
 dist/
 .vite/
 *.local
+*.tsbuildinfo
 
 # IDE / OS
 .vscode/
@@ -29,3 +30,6 @@ Thumbs.db
 
 # Docker
 pgdata/
+
+# Playwright (артефакты проверок)
+.playwright-mcp/
