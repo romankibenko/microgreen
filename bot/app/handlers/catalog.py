@@ -42,5 +42,7 @@ async def show_catalog(message: Message) -> None:
         if description:
             lines.append(f"  <i>{description}</i>")
 
-    lines.append("\nОформить заказ удобнее на сайте 👇")
-    await message.answer("\n".join(lines), reply_markup=shop_markup())
+    shop = shop_markup()
+    if shop is not None:
+        lines.append("\nОформить заказ удобнее на сайте 👇")
+    await message.answer("\n".join(lines), reply_markup=shop)

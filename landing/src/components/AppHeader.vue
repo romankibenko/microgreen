@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { BOT_URL } from '@/config'
+
 interface Props {
   cartCount: number
 }
@@ -19,21 +21,34 @@ const emit = defineEmits<Emits>()
         <span class="brand__name font-display">Зелёный двор</span>
       </a>
 
-      <v-btn
-        color="primary"
-        variant="flat"
-        prepend-icon="mdi-basket-outline"
-        @click="emit('openCart')"
-      >
-        Корзина
-        <v-badge
-          v-if="cartCount > 0"
-          :content="cartCount"
-          color="accent"
-          text-color="primary"
-          inline
+      <div class="site-header__actions">
+        <v-btn
+          v-if="BOT_URL"
+          :href="BOT_URL"
+          target="_blank"
+          rel="noopener"
+          variant="tonal"
+          color="primary"
+          icon="mdi-telegram"
+          aria-label="Telegram-бот"
         />
-      </v-btn>
+
+        <v-btn
+          color="primary"
+          variant="flat"
+          prepend-icon="mdi-basket-outline"
+          @click="emit('openCart')"
+        >
+          Корзина
+          <v-badge
+            v-if="cartCount > 0"
+            :content="cartCount"
+            color="accent"
+            text-color="primary"
+            inline
+          />
+        </v-btn>
+      </div>
     </div>
   </header>
 </template>
@@ -72,5 +87,11 @@ const emit = defineEmits<Emits>()
 .brand__name {
   font-size: 1.4rem;
   font-weight: 600;
+}
+
+.site-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 </style>

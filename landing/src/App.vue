@@ -5,6 +5,7 @@ import AppHeader from '@/components/AppHeader.vue'
 import CartDrawer from '@/components/cart/CartDrawer.vue'
 import ProductCatalog from '@/components/catalog/ProductCatalog.vue'
 import CheckoutDialog from '@/components/checkout/CheckoutDialog.vue'
+import OrderSuccessDialog from '@/components/checkout/OrderSuccessDialog.vue'
 import HeroSection from '@/components/HeroSection.vue'
 import type { Order, Product } from '@/api/types'
 import { useCartStore } from '@/stores/cart'
@@ -13,6 +14,8 @@ const cart = useCartStore()
 
 const drawerOpen = ref(false)
 const checkoutOpen = ref(false)
+const successOpen = ref(false)
+const successOrder = ref<Order | null>(null)
 const snackbar = ref(false)
 const snackbarText = ref('')
 
@@ -28,8 +31,8 @@ function startCheckout(): void {
 }
 
 function onOrderSuccess(order: Order): void {
-  snackbarText.value = `Заказ №${order.id} принят! Скоро позвоним 🌱`
-  snackbar.value = true
+  successOrder.value = order
+  successOpen.value = true
 }
 
 function scrollToCatalog(): void {
@@ -48,6 +51,7 @@ function scrollToCatalog(): void {
 
     <CartDrawer v-model="drawerOpen" @checkout="startCheckout" />
     <CheckoutDialog v-model="checkoutOpen" @success="onOrderSuccess" />
+    <OrderSuccessDialog v-model="successOpen" :order="successOrder" />
 
     <v-snackbar v-model="snackbar" color="primary" timeout="2600" location="bottom">
       {{ snackbarText }}
