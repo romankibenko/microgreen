@@ -29,7 +29,7 @@ const open = defineModel<boolean>({ default: false })
           size="large"
           variant="flat"
           block
-          prepend-icon="mdi-telegram"
+          prepend-icon="mdi-send"
         >
           Открыть Telegram-бот
         </v-btn>

@@ -27,9 +27,9 @@ const emit = defineEmits<Emits>()
           :href="BOT_URL"
           target="_blank"
           rel="noopener"
-          variant="tonal"
+          variant="flat"
           color="primary"
-          icon="mdi-telegram"
+          icon="mdi-send"
           aria-label="Telegram-бот"
         />
 
