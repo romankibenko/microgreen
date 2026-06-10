@@ -1,26 +1,34 @@
 from decimal import Decimal
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_session
-from app.models import Order, OrderItem, Product
+from app.models import Order, OrderItem, Product, TelegramUser
+from app.phone import normalize_phone
 from app.schemas import OrderCreate, OrderOut
+from app.telegram import (
+    build_admin_message,
+    build_client_message,
+    dispatch_order_notifications,
+)
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 
 
 @router.post("", response_model=OrderOut, status_code=status.HTTP_201_CREATED)
 async def create_order(
-    data: OrderCreate, session: AsyncSession = Depends(get_session)
+    data: OrderCreate,
+    background: BackgroundTasks,
+    session: AsyncSession = Depends(get_session),
 ) -> Order:
     product_ids = [item.product_id for item in data.items]
     result = await session.execute(select(Product).where(Product.id.in_(product_ids)))
     products = {p.id: p for p in result.scalars().all()}
 
     order = Order(
-        customer_phone=data.customer_phone,
+        customer_phone=normalize_phone(data.customer_phone),
         customer_name=data.customer_name,
         comment=data.comment,
     )
@@ -46,14 +54,41 @@ async def create_order(
     session.add(order)
     await session.commit()
     await session.refresh(order)
+
+    # уведомления — в фоне, чтобы Telegram не задерживал и не ронял ответ
+    client_chat_id = await session.scalar(
+        select(TelegramUser.chat_id).where(
+            TelegramUser.phone == order.customer_phone
+        )
+    )
+    background.add_task(
+        dispatch_order_notifications,
+        build_admin_message(order),
+        build_client_message(order),
+        client_chat_id,
+    )
     return order
 
 
 @router.get("", response_model=list[OrderOut])
 async def list_orders(
+    phone: str | None = None,
+    chat_id: int | None = None,
     session: AsyncSession = Depends(get_session),
 ) -> list[Order]:
-    result = await session.execute(select(Order).order_by(Order.id.desc()))
+    if chat_id is not None:
+        phone = await session.scalar(
+            select(TelegramUser.phone).where(TelegramUser.chat_id == chat_id)
+        )
+        if phone is None:
+            return []
+
+    stmt = select(Order)
+    if phone is not None:
+        stmt = stmt.where(Order.customer_phone == normalize_phone(phone))
+    stmt = stmt.order_by(Order.id.desc())
+
+    result = await session.execute(stmt)
     return list(result.scalars().all())
 
 

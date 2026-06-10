@@ -3,6 +3,7 @@ from decimal import Decimal
 from enum import Enum
 
 from sqlalchemy import (
+    BigInteger,
     CheckConstraint,
     DateTime,
     Enum as SAEnum,
@@ -81,6 +82,20 @@ class OrderItem(Base):
     quantity: Mapped[int] = mapped_column()
 
     order: Mapped["Order"] = relationship(back_populates="items")
+
+
+class TelegramUser(Base):
+    __tablename__ = "telegram_users"
+
+    chat_id: Mapped[int] = mapped_column(
+        BigInteger, primary_key=True, autoincrement=False
+    )
+    phone: Mapped[str | None] = mapped_column(String(20), index=True, default=None)
+    username: Mapped[str | None] = mapped_column(String(64), default=None)
+    first_name: Mapped[str | None] = mapped_column(String(120), default=None)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
 
 
 class Planting(Base):

@@ -61,3 +61,19 @@ class OrderOut(BaseModel):
     total: Decimal
     created_at: datetime
     items: list[OrderItemOut]
+
+
+class TelegramLinkIn(BaseModel):
+    chat_id: int
+    phone: str = Field(min_length=5, max_length=20)
+    username: str | None = Field(default=None, max_length=64)
+    first_name: str | None = Field(default=None, max_length=120)
+
+
+class TelegramUserOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    chat_id: int
+    phone: str | None
+    username: str | None
+    first_name: str | None

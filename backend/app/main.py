@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routers import orders, products
+from app.routers import orders, products, telegram
 
 app = FastAPI(title="Microgreen API")
 
@@ -15,6 +15,7 @@ app.add_middleware(
 
 app.include_router(products.router)
 app.include_router(orders.router)
+app.include_router(telegram.router)
 
 
 @app.get("/health")
