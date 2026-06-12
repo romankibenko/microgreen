@@ -23,8 +23,6 @@ const open = defineModel<boolean>({ default: false })
         <p class="success__hint">Хочешь видеть статус заказа?</p>
         <v-btn
           :href="BOT_URL"
-          target="_blank"
-          rel="noopener"
           color="primary"
           size="large"
           variant="flat"
