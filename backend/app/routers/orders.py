@@ -76,6 +76,10 @@ async def list_orders(
     chat_id: int | None = None,
     session: AsyncSession = Depends(get_session),
 ) -> list[Order]:
+    # Публичный эндпоинт обслуживает только бота/клиента — строго по своему телефону.
+    # Полный список (с чужими телефонами) доступен лишь админке через /admin/orders.
+    if phone is None and chat_id is None:
+        return []
     if chat_id is not None:
         phone = await session.scalar(
             select(TelegramUser.phone).where(TelegramUser.chat_id == chat_id)
