@@ -113,6 +113,7 @@ class Planting(Base):
     __tablename__ = "plantings"
     __table_args__ = (
         CheckConstraint("grow_days > 0", name="ck_plantings_grow_days_positive"),
+        CheckConstraint("trays > 0", name="ck_plantings_trays_positive"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -122,4 +123,5 @@ class Planting(Base):
     culture: Mapped[str] = mapped_column(String(120))
     sown_at: Mapped[date] = mapped_column()
     grow_days: Mapped[int] = mapped_column()
+    trays: Mapped[int] = mapped_column(default=1)
     note: Mapped[str | None] = mapped_column(Text, default=None)

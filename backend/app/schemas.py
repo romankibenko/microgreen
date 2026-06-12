@@ -97,6 +97,7 @@ class PlantingCreate(BaseModel):
     culture: str = Field(min_length=1, max_length=120)
     sown_at: date
     grow_days: int = Field(gt=0)
+    trays: int = Field(gt=0, default=1)
     note: str | None = None
     product_id: int | None = None
 
@@ -109,6 +110,7 @@ class PlantingOut(BaseModel):
     culture: str
     sown_at: date
     grow_days: int
+    trays: int
     note: str | None
 
     @computed_field

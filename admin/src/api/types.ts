@@ -25,6 +25,7 @@ export interface Planting {
   culture: string
   sown_at: string
   grow_days: number
+  trays: number
   note: string | null
   ready_at: string
 }
@@ -33,6 +34,7 @@ export interface PlantingPayload {
   culture: string
   sown_at: string
   grow_days: number
+  trays: number
   note?: string | null
   product_id?: number | null
 }
