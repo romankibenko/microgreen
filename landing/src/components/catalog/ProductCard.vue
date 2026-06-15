@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Product } from '@/api/types'
-import { formatPrice } from '@/utils/format'
+import { formatPrice, pluralLotki } from '@/utils/format'
 
 interface Props {
   product: Product
@@ -40,7 +40,7 @@ const emit = defineEmits<Emits>()
         :class="{ 'product-card__stock--out': props.product.stock <= 0 }"
       >
         {{ props.product.stock > 0
-          ? `🟢 готово к продаже: ${props.product.stock}`
+          ? `🟢 готово к продаже: ${props.product.stock} ${pluralLotki(props.product.stock)}`
           : '⚪ нет в наличии' }}
       </p>
 

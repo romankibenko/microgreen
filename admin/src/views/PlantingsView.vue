@@ -117,14 +117,14 @@ const productItems = computed(() =>
 function openHarvest(p: Planting): void {
   harvestId.value = p.id
   harvestProductId.value = p.product_id
-  harvestQty.value = null
+  harvestQty.value = p.trays
   harvestError.value = null
   harvestDialog.value = true
 }
 
 async function doHarvest(): Promise<void> {
   if (!harvestProductId.value || !harvestQty.value) {
-    harvestError.value = 'Выбери товар и укажи кол-во контейнеров'
+    harvestError.value = 'Выбери товар и укажи кол-во лотков'
     return
   }
   harvesting.value = true
@@ -344,7 +344,7 @@ onMounted(load)
         />
         <v-text-field
           v-model.number="harvestQty"
-          label="Контейнеров собрано"
+          label="Лотков собрано"
           type="number"
           min="1"
           hide-details

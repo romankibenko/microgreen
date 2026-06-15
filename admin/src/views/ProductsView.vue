@@ -206,7 +206,7 @@ function formatPrice(p: string): string {
           <v-col cols="6">
             <v-text-field
               v-model.number="form.stock"
-              label="Наличие (контейнеров)"
+              label="Наличие (лотков)"
               type="number"
               min="0"
               hide-details

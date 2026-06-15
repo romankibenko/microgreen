@@ -39,7 +39,7 @@ class Product(Base):
     unit: Mapped[str | None] = mapped_column(String(40), default=None)
     image_url: Mapped[str | None] = mapped_column(String(500), default=None)
     is_active: Mapped[bool] = mapped_column(default=True)
-    # наличие в контейнерах, готовых к продаже; пополняется при сборе партии
+    # наличие в лотках, готовых к продаже; пополняется при сборе партии
     stock: Mapped[int] = mapped_column(default=0)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
@@ -137,6 +137,6 @@ class Planting(Base):
     shade_days: Mapped[int] = mapped_column(default=3)
     trays: Mapped[int] = mapped_column(default=1)
     note: Mapped[str | None] = mapped_column(Text, default=None)
-    # сбор: дата и сколько контейнеров получено (зачислено в наличие товара)
+    # сбор: дата и сколько лотков получено (зачислено в наличие товара)
     harvested_at: Mapped[date | None] = mapped_column(default=None)
     harvested_qty: Mapped[int | None] = mapped_column(default=None)
