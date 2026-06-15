@@ -114,6 +114,10 @@ class Planting(Base):
     __table_args__ = (
         CheckConstraint("grow_days > 0", name="ck_plantings_grow_days_positive"),
         CheckConstraint("trays > 0", name="ck_plantings_trays_positive"),
+        CheckConstraint(
+            "shade_days >= 0 AND shade_days <= grow_days",
+            name="ck_plantings_shade_days_valid",
+        ),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -123,5 +127,6 @@ class Planting(Base):
     culture: Mapped[str] = mapped_column(String(120))
     sown_at: Mapped[date] = mapped_column()
     grow_days: Mapped[int] = mapped_column()
+    shade_days: Mapped[int] = mapped_column(default=3)
     trays: Mapped[int] = mapped_column(default=1)
     note: Mapped[str | None] = mapped_column(Text, default=None)

@@ -1,7 +1,7 @@
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, Field, computed_field
+from pydantic import BaseModel, ConfigDict, Field, computed_field, model_validator
 
 from app.models import OrderStatus
 
@@ -97,9 +97,20 @@ class PlantingCreate(BaseModel):
     culture: str = Field(min_length=1, max_length=120)
     sown_at: date
     grow_days: int = Field(gt=0)
+    shade_days: int = Field(ge=0, default=3)
     trays: int = Field(gt=0, default=1)
     note: str | None = None
     product_id: int | None = None
+
+    @model_validator(mode="after")
+    def check_shade_within_grow(self) -> "PlantingCreate":
+        if self.shade_days > self.grow_days:
+            raise ValueError("shade_days не может превышать grow_days")
+        return self
+
+
+class PlantingUpdate(BaseModel):
+    note: str | None = None
 
 
 class PlantingOut(BaseModel):
@@ -110,6 +121,7 @@ class PlantingOut(BaseModel):
     culture: str
     sown_at: date
     grow_days: int
+    shade_days: int
     trays: int
     note: str | None
 
@@ -117,3 +129,14 @@ class PlantingOut(BaseModel):
     @property
     def ready_at(self) -> date:
         return self.sown_at + timedelta(days=self.grow_days)
+
+    @computed_field
+    @property
+    def stage(self) -> str:
+        """Текущий этап партии по сегодняшней дате: тень → свет → готово."""
+        today = date.today()
+        if today < self.sown_at + timedelta(days=self.shade_days):
+            return "shade"
+        if today < self.sown_at + timedelta(days=self.grow_days):
+            return "light"
+        return "ready"

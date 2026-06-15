@@ -54,6 +54,14 @@ export async function createPlanting(payload: PlantingPayload): Promise<Planting
   return data
 }
 
+export async function updatePlantingNote(
+  id: number,
+  note: string | null,
+): Promise<Planting> {
+  const { data } = await api.patch<Planting>(`/admin/plantings/${id}`, { note })
+  return data
+}
+
 export async function deletePlanting(id: number): Promise<void> {
   await api.delete(`/admin/plantings/${id}`)
 }

@@ -5,7 +5,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth import get_current_user
 from app.database import get_session
 from app.models import Order, Planting
-from app.schemas import OrderOut, OrderStatusUpdate, PlantingCreate, PlantingOut
+from app.schemas import (
+    OrderOut,
+    OrderStatusUpdate,
+    PlantingCreate,
+    PlantingOut,
+    PlantingUpdate,
+)
 
 # Весь роутер закрыт JWT — без валидного токена сюда не пройти.
 router = APIRouter(
@@ -54,6 +60,21 @@ async def create_planting(
 ) -> Planting:
     planting = Planting(**data.model_dump())
     session.add(planting)
+    await session.commit()
+    await session.refresh(planting)
+    return planting
+
+
+@router.patch("/plantings/{planting_id}", response_model=PlantingOut)
+async def update_planting(
+    planting_id: int,
+    data: PlantingUpdate,
+    session: AsyncSession = Depends(get_session),
+) -> Planting:
+    planting = await session.get(Planting, planting_id)
+    if planting is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Посадка не найдена")
+    planting.note = data.note
     await session.commit()
     await session.refresh(planting)
     return planting

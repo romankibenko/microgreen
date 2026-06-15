@@ -19,21 +19,26 @@ export interface Order {
   items: OrderItem[]
 }
 
+export type PlantingStage = 'shade' | 'light' | 'ready'
+
 export interface Planting {
   id: number
   product_id: number | null
   culture: string
   sown_at: string
   grow_days: number
+  shade_days: number
   trays: number
   note: string | null
   ready_at: string
+  stage: PlantingStage
 }
 
 export interface PlantingPayload {
   culture: string
   sown_at: string
   grow_days: number
+  shade_days: number
   trays: number
   note?: string | null
   product_id?: number | null
