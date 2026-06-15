@@ -95,6 +95,8 @@ async function remove(id: number): Promise<void> {
 function formatPrice(p: string): string {
   return `${Number(p).toLocaleString('ru-RU')} ₽`
 }
+
+onMounted(load)
 </script>
 
 <template>
