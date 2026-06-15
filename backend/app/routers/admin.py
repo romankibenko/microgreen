@@ -1,6 +1,6 @@
 from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -8,8 +8,8 @@ from app.auth import get_current_user
 from app.config import settings
 from app.database import get_session
 from app.digest import build_digest_text
-from app.models import Order, OrderStatus, Planting, Product
-from app.telegram import send_message
+from app.models import Order, OrderStatus, Planting, Product, TelegramUser
+from app.telegram import build_status_message, send_message
 from app.schemas import (
     HarvestRequest,
     OrderOut,
@@ -53,6 +53,7 @@ async def _shift_stock(session: AsyncSession, order: Order, sign: int) -> None:
 async def update_order_status(
     order_id: int,
     data: OrderStatusUpdate,
+    background: BackgroundTasks,
     session: AsyncSession = Depends(get_session),
 ) -> Order:
     order = await session.get(Order, order_id)
@@ -68,6 +69,17 @@ async def update_order_status(
     order.status = data.status
     await session.commit()
     await session.refresh(order)
+
+    # уведомляем клиента о новом статусе, если его телефон привязан к боту
+    text = build_status_message(order)
+    if text is not None:
+        chat_id = await session.scalar(
+            select(TelegramUser.chat_id).where(
+                TelegramUser.phone == order.customer_phone
+            )
+        )
+        if chat_id is not None:
+            background.add_task(send_message, chat_id, text)
     return order
 
 

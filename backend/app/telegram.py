@@ -3,7 +3,7 @@ from html import escape
 import httpx
 
 from app.config import settings
-from app.models import Order
+from app.models import Order, OrderStatus
 
 TELEGRAM_API = "https://api.telegram.org"
 
@@ -50,6 +50,22 @@ def build_client_message(order: Order) -> str:
         f"по номеру {escape(order.customer_phone)}, чтобы согласовать время.\n\n"
         f"Свежей зелени! 🥬"
     )
+
+
+# Тексты статусов для клиента. new не уведомляем — это начальное состояние.
+_STATUS_PHRASE = {
+    OrderStatus.assembled: "📦 собран и готов к доставке",
+    OrderStatus.delivered: "✅ доставлен. Спасибо, что выбрал нас — свежей зелени! 🥬",
+    OrderStatus.cancelled: "❌ отменён. Если это ошибка — напиши нам.",
+}
+
+
+def build_status_message(order: Order) -> str | None:
+    """Сообщение клиенту о новом статусе. None — если по статусу не уведомляем."""
+    phrase = _STATUS_PHRASE.get(order.status)
+    if phrase is None:
+        return None
+    return f"🌱 Заказ №{order.id} {phrase}"
 
 
 async def dispatch_order_notifications(
