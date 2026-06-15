@@ -1,5 +1,8 @@
 from contextlib import asynccontextmanager
+from zoneinfo import ZoneInfo
 
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select
@@ -7,6 +10,7 @@ from sqlalchemy import select
 from app.auth import hash_password
 from app.config import settings
 from app.database import SessionLocal
+from app.digest import send_daily_digest
 from app.models import User
 from app.routers import admin, auth, orders, products, telegram
 
@@ -32,7 +36,16 @@ async def seed_admin() -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await seed_admin()
-    yield
+    scheduler = AsyncIOScheduler(timezone=ZoneInfo(settings.digest_tz))
+    scheduler.add_job(
+        send_daily_digest,
+        CronTrigger(hour=settings.digest_hour, minute=0),
+    )
+    scheduler.start()
+    try:
+        yield
+    finally:
+        scheduler.shutdown(wait=False)
 
 
 app = FastAPI(title="Microgreen API", lifespan=lifespan)

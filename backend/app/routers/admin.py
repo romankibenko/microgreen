@@ -5,8 +5,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import get_current_user
+from app.config import settings
 from app.database import get_session
+from app.digest import build_digest_text
 from app.models import Order, OrderStatus, Planting, Product
+from app.telegram import send_message
 from app.schemas import (
     HarvestRequest,
     OrderOut,
@@ -187,3 +190,18 @@ async def delete_planting(
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Посадка не найдена")
     await session.delete(planting)
     await session.commit()
+
+
+@router.post("/digest/test")
+async def trigger_digest(
+    session: AsyncSession = Depends(get_session),
+) -> dict:
+    """Ручной прогон ежедневного дайджеста — формирует текст и шлёт админу.
+    preview отдаём всегда, чтобы видеть результат прямо в ответе."""
+    text = await build_digest_text(session)
+    if text is None:
+        return {"sent": False, "preview": None, "reason": "На сегодня событий нет"}
+    sent = settings.admin_chat_id is not None
+    if sent:
+        await send_message(settings.admin_chat_id, text)
+    return {"sent": sent, "preview": text}

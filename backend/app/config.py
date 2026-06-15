@@ -13,6 +13,10 @@ class Settings(BaseSettings):
     admin_chat_id: int | None = None
     shop_url: str = "http://localhost:5173"
 
+    # Ежедневный дайджест по посадкам: час (по digest_tz) и часовой пояс.
+    digest_hour: int = 9
+    digest_tz: str = "Europe/Moscow"
+
     # Админка: JWT + сидинг первого админа из .env при старте.
     jwt_secret: str = "change-me-in-prod"
     jwt_expire_minutes: int = 1440
