@@ -6,6 +6,7 @@ export interface Product {
   unit: string | null
   image_url: string | null
   is_active: boolean
+  stock: number
   created_at: string
 }
 

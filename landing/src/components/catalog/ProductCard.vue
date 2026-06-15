@@ -35,6 +35,15 @@ const emit = defineEmits<Emits>()
         {{ props.product.description }}
       </p>
 
+      <p
+        class="product-card__stock"
+        :class="{ 'product-card__stock--out': props.product.stock <= 0 }"
+      >
+        {{ props.product.stock > 0
+          ? `🟢 готово к продаже: ${props.product.stock}`
+          : '⚪ нет в наличии' }}
+      </p>
+
       <div class="product-card__footer">
         <div class="product-card__price">
           <span class="product-card__amount">{{ formatPrice(props.product.price) }}</span>
@@ -47,6 +56,7 @@ const emit = defineEmits<Emits>()
           variant="flat"
           icon="mdi-plus"
           size="small"
+          :disabled="props.product.stock <= 0"
           :aria-label="`Добавить «${props.product.name}» в корзину`"
           @click="emit('add', props.product)"
         />
@@ -104,6 +114,19 @@ const emit = defineEmits<Emits>()
   color: var(--color-ink);
   opacity: 0.72;
   margin: 0;
+}
+
+.product-card__stock {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-forest);
+  margin: 0;
+}
+
+.product-card__stock--out {
+  color: var(--color-ink);
+  opacity: 0.55;
+  font-weight: 500;
 }
 
 .product-card__footer {

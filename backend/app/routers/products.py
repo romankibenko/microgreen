@@ -4,20 +4,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_session
 from app.models import Product
-from app.schemas import ProductCreate, ProductOut
+from app.schemas import ProductOut
 
 router = APIRouter(prefix="/products", tags=["products"])
-
-
-@router.post("", response_model=ProductOut, status_code=status.HTTP_201_CREATED)
-async def create_product(
-    data: ProductCreate, session: AsyncSession = Depends(get_session)
-) -> Product:
-    product = Product(**data.model_dump())
-    session.add(product)
-    await session.commit()
-    await session.refresh(product)
-    return product
 
 
 @router.get("", response_model=list[ProductOut])

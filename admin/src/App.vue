@@ -21,6 +21,7 @@ function logout(): void {
       <v-app-bar flat color="primary" density="comfortable">
         <v-app-bar-title class="font-display">🌱 Микрозелень — админка</v-app-bar-title>
         <v-btn variant="text" :to="{ name: 'orders' }">Заказы</v-btn>
+        <v-btn variant="text" :to="{ name: 'products' }">Товары</v-btn>
         <v-btn variant="text" :to="{ name: 'plantings' }">Посадки</v-btn>
         <v-btn variant="text" prepend-icon="mdi-logout" @click="logout">Выйти</v-btn>
       </v-app-bar>

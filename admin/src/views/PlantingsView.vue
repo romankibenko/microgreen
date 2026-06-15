@@ -1,16 +1,19 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 import {
   createPlanting,
   deletePlanting,
   fetchPlantings,
+  fetchProducts,
+  harvestPlanting,
   updatePlantingNote,
 } from '@/api/client'
-import type { Planting, PlantingStage } from '@/api/types'
+import type { Planting, PlantingStage, Product } from '@/api/types'
 import { CULTURES } from '@/config'
 
 const plantings = ref<Planting[]>([])
+const products = ref<Product[]>([])
 const loading = ref(true)
 
 const culture = ref<string | null>(null)
@@ -25,6 +28,13 @@ const formError = ref<string | null>(null)
 const editingId = ref<number | null>(null)
 const editNoteText = ref('')
 
+const harvestDialog = ref(false)
+const harvestId = ref<number | null>(null)
+const harvestProductId = ref<number | null>(null)
+const harvestQty = ref<number | null>(null)
+const harvesting = ref(false)
+const harvestError = ref<string | null>(null)
+
 const STAGE_LABEL: Record<PlantingStage, string> = {
   shade: 'в тени',
   light: 'на свету',
@@ -38,7 +48,10 @@ const STAGE_COLOR: Record<PlantingStage, string> = {
 
 async function load(): Promise<void> {
   loading.value = true
-  plantings.value = await fetchPlantings()
+  ;[plantings.value, products.value] = await Promise.all([
+    fetchPlantings(),
+    fetchProducts(),
+  ])
   loading.value = false
 }
 
@@ -95,6 +108,41 @@ async function saveEdit(id: number): Promise<void> {
   await updatePlantingNote(id, editNoteText.value.trim() || null)
   editingId.value = null
   await load()
+}
+
+const productItems = computed(() =>
+  products.value.map((p) => ({ title: p.name, value: p.id })),
+)
+
+function openHarvest(p: Planting): void {
+  harvestId.value = p.id
+  harvestProductId.value = p.product_id
+  harvestQty.value = null
+  harvestError.value = null
+  harvestDialog.value = true
+}
+
+async function doHarvest(): Promise<void> {
+  if (!harvestProductId.value || !harvestQty.value) {
+    harvestError.value = 'Выбери товар и укажи кол-во контейнеров'
+    return
+  }
+  harvesting.value = true
+  harvestError.value = null
+  try {
+    await harvestPlanting(harvestId.value!, {
+      product_id: harvestProductId.value,
+      qty: harvestQty.value,
+    })
+    harvestDialog.value = false
+    await load()
+  }
+  catch {
+    harvestError.value = 'Не удалось отметить сбор'
+  }
+  finally {
+    harvesting.value = false
+  }
 }
 
 function formatDate(d: string): string {
@@ -195,6 +243,7 @@ onMounted(load)
         <th>Этап</th>
         <th>Готово</th>
         <th>Осталось</th>
+        <th>Сбор</th>
         <th>Заметка</th>
         <th />
       </tr>
@@ -219,6 +268,27 @@ onMounted(load)
           >
             {{ daysLeft(p.ready_at) <= 0 ? 'срезать!' : `${daysLeft(p.ready_at)} дн.` }}
           </v-chip>
+        </td>
+        <td>
+          <v-chip
+            v-if="p.harvested_at"
+            color="success"
+            size="small"
+            variant="flat"
+            prepend-icon="mdi-check"
+          >
+            {{ p.harvested_qty }}
+          </v-chip>
+          <v-btn
+            v-else
+            variant="tonal"
+            size="small"
+            color="primary"
+            prepend-icon="mdi-basket-outline"
+            @click="openHarvest(p)"
+          >
+            Собрать
+          </v-btn>
         </td>
         <td class="text-medium-emphasis">
           <div v-if="editingId === p.id" class="d-flex align-center ga-1">
@@ -260,4 +330,45 @@ onMounted(load)
       </tr>
     </tbody>
   </v-table>
+
+  <v-dialog v-model="harvestDialog" max-width="420">
+    <v-card>
+      <v-card-title class="font-display">Сбор партии</v-card-title>
+      <v-card-text>
+        <v-select
+          v-model="harvestProductId"
+          :items="productItems"
+          label="Зачислить в товар"
+          class="mb-2"
+          hide-details
+        />
+        <v-text-field
+          v-model.number="harvestQty"
+          label="Контейнеров собрано"
+          type="number"
+          min="1"
+          hide-details
+        />
+        <p class="text-caption text-medium-emphasis mt-2">
+          Кол-во прибавится к наличию товара на сайте.
+        </p>
+        <v-alert
+          v-if="harvestError"
+          type="error"
+          variant="tonal"
+          density="compact"
+          class="mt-3"
+        >
+          {{ harvestError }}
+        </v-alert>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer />
+        <v-btn variant="text" @click="harvestDialog = false">Отмена</v-btn>
+        <v-btn color="primary" variant="flat" :loading="harvesting" @click="doHarvest">
+          Собрать
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>

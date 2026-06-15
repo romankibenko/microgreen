@@ -19,6 +19,28 @@ export interface Order {
   items: OrderItem[]
 }
 
+export interface Product {
+  id: number
+  name: string
+  description: string | null
+  price: string
+  unit: string | null
+  image_url: string | null
+  is_active: boolean
+  stock: number
+  created_at: string
+}
+
+export interface ProductPayload {
+  name: string
+  description: string | null
+  price: string
+  unit: string | null
+  image_url: string | null
+  is_active: boolean
+  stock: number
+}
+
 export type PlantingStage = 'shade' | 'light' | 'ready'
 
 export interface Planting {
@@ -32,6 +54,13 @@ export interface Planting {
   note: string | null
   ready_at: string
   stage: PlantingStage
+  harvested_at: string | null
+  harvested_qty: number | null
+}
+
+export interface HarvestPayload {
+  product_id: number
+  qty: number
 }
 
 export interface PlantingPayload {

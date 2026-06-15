@@ -29,6 +29,7 @@ class Product(Base):
     __tablename__ = "products"
     __table_args__ = (
         CheckConstraint("price >= 0", name="ck_products_price_non_negative"),
+        CheckConstraint("stock >= 0", name="ck_products_stock_non_negative"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -38,6 +39,8 @@ class Product(Base):
     unit: Mapped[str | None] = mapped_column(String(40), default=None)
     image_url: Mapped[str | None] = mapped_column(String(500), default=None)
     is_active: Mapped[bool] = mapped_column(default=True)
+    # наличие в контейнерах, готовых к продаже; пополняется при сборе партии
+    stock: Mapped[int] = mapped_column(default=0)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
@@ -118,6 +121,10 @@ class Planting(Base):
             "shade_days >= 0 AND shade_days <= grow_days",
             name="ck_plantings_shade_days_valid",
         ),
+        CheckConstraint(
+            "harvested_qty IS NULL OR harvested_qty > 0",
+            name="ck_plantings_harvested_qty_positive",
+        ),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -130,3 +137,6 @@ class Planting(Base):
     shade_days: Mapped[int] = mapped_column(default=3)
     trays: Mapped[int] = mapped_column(default=1)
     note: Mapped[str | None] = mapped_column(Text, default=None)
+    # сбор: дата и сколько контейнеров получено (зачислено в наличие товара)
+    harvested_at: Mapped[date | None] = mapped_column(default=None)
+    harvested_qty: Mapped[int | None] = mapped_column(default=None)

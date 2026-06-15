@@ -1,7 +1,15 @@
 import axios from 'axios'
 
 import { API_URL, TOKEN_KEY } from '@/config'
-import type { Order, OrderStatus, Planting, PlantingPayload } from './types'
+import type {
+  HarvestPayload,
+  Order,
+  OrderStatus,
+  Planting,
+  PlantingPayload,
+  Product,
+  ProductPayload,
+} from './types'
 
 const api = axios.create({ baseURL: API_URL })
 
@@ -44,6 +52,28 @@ export async function setOrderStatus(
   return data
 }
 
+export async function fetchProducts(): Promise<Product[]> {
+  const { data } = await api.get<Product[]>('/admin/products')
+  return data
+}
+
+export async function createProduct(payload: ProductPayload): Promise<Product> {
+  const { data } = await api.post<Product>('/admin/products', payload)
+  return data
+}
+
+export async function updateProduct(
+  id: number,
+  payload: Partial<ProductPayload>,
+): Promise<Product> {
+  const { data } = await api.patch<Product>(`/admin/products/${id}`, payload)
+  return data
+}
+
+export async function deleteProduct(id: number): Promise<void> {
+  await api.delete(`/admin/products/${id}`)
+}
+
 export async function fetchPlantings(): Promise<Planting[]> {
   const { data } = await api.get<Planting[]>('/admin/plantings')
   return data
@@ -59,6 +89,14 @@ export async function updatePlantingNote(
   note: string | null,
 ): Promise<Planting> {
   const { data } = await api.patch<Planting>(`/admin/plantings/${id}`, { note })
+  return data
+}
+
+export async function harvestPlanting(
+  id: number,
+  payload: HarvestPayload,
+): Promise<Planting> {
+  const { data } = await api.post<Planting>(`/admin/plantings/${id}/harvest`, payload)
   return data
 }
 

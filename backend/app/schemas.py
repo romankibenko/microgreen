@@ -13,6 +13,17 @@ class ProductCreate(BaseModel):
     unit: str | None = Field(default=None, max_length=40)
     image_url: str | None = Field(default=None, max_length=500)
     is_active: bool = True
+    stock: int = Field(ge=0, default=0)
+
+
+class ProductUpdate(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=120)
+    description: str | None = None
+    price: Decimal | None = Field(default=None, ge=0, max_digits=10, decimal_places=2)
+    unit: str | None = Field(default=None, max_length=40)
+    image_url: str | None = Field(default=None, max_length=500)
+    is_active: bool | None = None
+    stock: int | None = Field(default=None, ge=0)
 
 
 class ProductOut(BaseModel):
@@ -25,6 +36,7 @@ class ProductOut(BaseModel):
     unit: str | None
     image_url: str | None
     is_active: bool
+    stock: int
     created_at: datetime
 
 
@@ -113,6 +125,11 @@ class PlantingUpdate(BaseModel):
     note: str | None = None
 
 
+class HarvestRequest(BaseModel):
+    product_id: int
+    qty: int = Field(gt=0)
+
+
 class PlantingOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -124,6 +141,8 @@ class PlantingOut(BaseModel):
     shade_days: int
     trays: int
     note: str | None
+    harvested_at: date | None
+    harvested_qty: int | None
 
     @computed_field
     @property
