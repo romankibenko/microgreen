@@ -6,6 +6,7 @@ import ProductCard from './ProductCard.vue'
 
 interface Emits {
   add: [product: Product]
+  details: [product: Product]
 }
 
 const emit = defineEmits<Emits>()
@@ -39,6 +40,7 @@ const { products, loading, error, load } = useProducts()
         :key="product.id"
         :product="product"
         @add="emit('add', $event)"
+        @details="emit('details', $event)"
       />
     </div>
   </section>

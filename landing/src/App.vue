@@ -4,6 +4,7 @@ import { ref } from 'vue'
 import AppHeader from '@/components/AppHeader.vue'
 import CartDrawer from '@/components/cart/CartDrawer.vue'
 import ProductCatalog from '@/components/catalog/ProductCatalog.vue'
+import ProductDetailDialog from '@/components/catalog/ProductDetailDialog.vue'
 import CheckoutDialog from '@/components/checkout/CheckoutDialog.vue'
 import OrderSuccessDialog from '@/components/checkout/OrderSuccessDialog.vue'
 import HeroSection from '@/components/HeroSection.vue'
@@ -18,11 +19,18 @@ const successOpen = ref(false)
 const successOrder = ref<Order | null>(null)
 const snackbar = ref(false)
 const snackbarText = ref('')
+const detailOpen = ref(false)
+const detailProduct = ref<Product | null>(null)
 
 function handleAdd(product: Product): void {
   cart.add(product)
   snackbarText.value = `«${product.name}» в корзине`
   snackbar.value = true
+}
+
+function handleDetails(product: Product): void {
+  detailProduct.value = product
+  detailOpen.value = true
 }
 
 function startCheckout(): void {
@@ -46,8 +54,14 @@ function scrollToCatalog(): void {
 
     <v-main>
       <HeroSection @browse="scrollToCatalog" />
-      <ProductCatalog @add="handleAdd" />
+      <ProductCatalog @add="handleAdd" @details="handleDetails" />
     </v-main>
+
+    <ProductDetailDialog
+      v-model="detailOpen"
+      :product="detailProduct"
+      @add="handleAdd"
+    />
 
     <CartDrawer v-model="drawerOpen" @checkout="startCheckout" />
     <CheckoutDialog v-model="checkoutOpen" @success="onOrderSuccess" />

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Product } from '@/api/types'
-import { formatPrice, pluralLotki } from '@/utils/format'
+import { cultureGradient, formatPrice, pluralLotki } from '@/utils/format'
 
 interface Props {
   product: Product
@@ -8,6 +8,7 @@ interface Props {
 
 interface Emits {
   add: [product: Product]
+  details: [product: Product]
 }
 
 const props = defineProps<Props>()
@@ -15,7 +16,14 @@ const emit = defineEmits<Emits>()
 </script>
 
 <template>
-  <v-card class="product-card" elevation="0" border>
+  <v-card
+    class="product-card"
+    elevation="0"
+    border
+    role="button"
+    :aria-label="`Подробнее о «${props.product.name}»`"
+    @click="emit('details', props.product)"
+  >
     <div class="product-card__media">
       <v-img
         v-if="props.product.image_url"
@@ -24,7 +32,13 @@ const emit = defineEmits<Emits>()
         cover
         height="220"
       />
-      <div v-else class="product-card__placeholder">🌱</div>
+      <div
+        v-else
+        class="product-card__placeholder"
+        :style="{ background: cultureGradient(props.product.name) }"
+      >
+        🌱
+      </div>
     </div>
 
     <div class="product-card__body">
@@ -58,7 +72,7 @@ const emit = defineEmits<Emits>()
           size="small"
           :disabled="props.product.stock <= 0"
           :aria-label="`Добавить «${props.product.name}» в корзину`"
-          @click="emit('add', props.product)"
+          @click.stop="emit('add', props.product)"
         />
       </div>
     </div>
@@ -72,6 +86,7 @@ const emit = defineEmits<Emits>()
   height: 100%;
   background: var(--color-cream);
   overflow: hidden;
+  cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -90,7 +105,6 @@ const emit = defineEmits<Emits>()
   align-items: center;
   justify-content: center;
   font-size: 4rem;
-  opacity: 0.5;
 }
 
 .product-card__body {
@@ -114,6 +128,10 @@ const emit = defineEmits<Emits>()
   color: var(--color-ink);
   opacity: 0.72;
   margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .product-card__stock {
