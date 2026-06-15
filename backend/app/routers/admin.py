@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import get_current_user
 from app.database import get_session
-from app.models import Order, Planting, Product
+from app.models import Order, OrderStatus, Planting, Product
 from app.schemas import (
     HarvestRequest,
     OrderOut,
@@ -33,6 +33,19 @@ async def list_all_orders(
     return list(result.scalars().all())
 
 
+async def _shift_stock(session: AsyncSession, order: Order, sign: int) -> None:
+    """Меняет наличие товаров по позициям заказа. sign=-1 списать, +1 вернуть.
+    Списание не уводит наличие в минус (цифра могла отставать)."""
+    for item in order.items:
+        product = await session.get(Product, item.product_id)
+        if product is None:
+            continue
+        if sign < 0:
+            product.stock = max(0, product.stock - item.quantity)
+        else:
+            product.stock += item.quantity
+
+
 @router.patch("/orders/{order_id}/status", response_model=OrderOut)
 async def update_order_status(
     order_id: int,
@@ -42,6 +55,13 @@ async def update_order_status(
     order = await session.get(Order, order_id)
     if order is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Заказ не найден")
+    # списываем наличие при доставке, возвращаем при отмене — однократно (флаг)
+    if data.status == OrderStatus.delivered and not order.stock_deducted:
+        await _shift_stock(session, order, sign=-1)
+        order.stock_deducted = True
+    elif data.status == OrderStatus.cancelled and order.stock_deducted:
+        await _shift_stock(session, order, sign=1)
+        order.stock_deducted = False
     order.status = data.status
     await session.commit()
     await session.refresh(order)

@@ -57,6 +57,8 @@ class Order(Base):
         SAEnum(OrderStatus, native_enum=False, length=20), default=OrderStatus.new
     )
     total: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=Decimal("0"))
+    # было ли уже списано наличие по этому заказу (защита от двойного списания)
+    stock_deducted: Mapped[bool] = mapped_column(default=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
