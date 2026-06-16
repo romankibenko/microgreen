@@ -52,6 +52,10 @@ export async function setOrderStatus(
   return data
 }
 
+export async function deleteOrder(id: number): Promise<void> {
+  await api.delete(`/admin/orders/${id}`)
+}
+
 export async function fetchProducts(): Promise<Product[]> {
   const { data } = await api.get<Product[]>('/admin/products')
   return data

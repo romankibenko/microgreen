@@ -84,6 +84,18 @@ async def update_order_status(
     return order
 
 
+@router.delete("/orders/{order_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_order(
+    order_id: int, session: AsyncSession = Depends(get_session)
+) -> None:
+    order = await session.get(Order, order_id)
+    if order is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Заказ не найден")
+    # позиции уйдут каскадом (cascade=all,delete-orphan + ondelete=CASCADE)
+    await session.delete(order)
+    await session.commit()
+
+
 @router.get("/products", response_model=list[ProductOut])
 async def list_all_products(
     session: AsyncSession = Depends(get_session),

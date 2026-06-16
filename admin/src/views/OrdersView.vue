@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 
-import { fetchOrders, setOrderStatus } from '@/api/client'
+import { deleteOrder, fetchOrders, setOrderStatus } from '@/api/client'
 import type { Order, OrderStatus } from '@/api/types'
 
 const orders = ref<Order[]>([])
 const loading = ref(true)
 const error = ref<string | null>(null)
+
+const toDelete = ref<Order | null>(null)
+const deleting = ref(false)
 
 const statusOptions: { value: OrderStatus; title: string }[] = [
   { value: 'new', title: '🆕 Новый' },
@@ -32,6 +35,23 @@ async function load(): Promise<void> {
 async function changeStatus(order: Order, status: OrderStatus): Promise<void> {
   const updated = await setOrderStatus(order.id, status)
   order.status = updated.status
+}
+
+async function confirmDelete(): Promise<void> {
+  if (toDelete.value === null) return
+  deleting.value = true
+  error.value = null
+  try {
+    await deleteOrder(toDelete.value.id)
+    orders.value = orders.value.filter((o) => o.id !== toDelete.value!.id)
+    toDelete.value = null
+  }
+  catch {
+    error.value = 'Не удалось удалить заказ'
+  }
+  finally {
+    deleting.value = false
+  }
 }
 
 function formatDate(iso: string): string {
@@ -76,6 +96,14 @@ onMounted(load)
           <span class="text-caption text-medium-emphasis">
             {{ formatDate(order.created_at) }}
           </span>
+          <v-btn
+            icon="mdi-delete-outline"
+            variant="text"
+            size="small"
+            color="error"
+            class="ml-1"
+            @click="toDelete = order"
+          />
         </div>
 
         <div class="text-body-2 mb-1">
@@ -106,4 +134,20 @@ onMounted(load)
       </v-card>
     </v-col>
   </v-row>
+
+  <v-dialog :model-value="toDelete !== null" max-width="420" @update:model-value="toDelete = null">
+    <v-card>
+      <v-card-title class="font-display">Удалить заказ?</v-card-title>
+      <v-card-text>
+        Заказ №{{ toDelete?.id }} будет удалён безвозвратно вместе с позициями.
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer />
+        <v-btn variant="text" @click="toDelete = null">Отмена</v-btn>
+        <v-btn color="error" variant="flat" :loading="deleting" @click="confirmDelete">
+          Удалить
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
