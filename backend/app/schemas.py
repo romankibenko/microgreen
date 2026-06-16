@@ -28,6 +28,11 @@ class ProductUpdate(BaseModel):
     stock: int | None = Field(default=None, ge=0)
 
 
+class ProductReorder(BaseModel):
+    # id товаров в желаемом порядке; sort_order проставляется по индексу
+    ids: list[int]
+
+
 class ProductOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

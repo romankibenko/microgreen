@@ -5,6 +5,7 @@ import {
   createProduct,
   deleteProduct,
   fetchProducts,
+  reorderProducts,
   updateProduct,
 } from '@/api/client'
 import type { Product, ProductPayload } from '@/api/types'
@@ -96,6 +97,31 @@ function formatPrice(p: string): string {
   return `${Number(p).toLocaleString('ru-RU')} ₽`
 }
 
+const dragIndex = ref<number | null>(null)
+
+function onDragStart(index: number): void {
+  dragIndex.value = index
+}
+
+async function onDrop(index: number): Promise<void> {
+  const from = dragIndex.value
+  dragIndex.value = null
+  if (from === null || from === index) return
+  // оптимистично переставляем строку, затем сохраняем порядок на бэке
+  const reordered = [...products.value]
+  const [moved] = reordered.splice(from, 1)
+  reordered.splice(index, 0, moved)
+  products.value = reordered
+  listError.value = null
+  try {
+    products.value = await reorderProducts(reordered.map((p) => p.id))
+  }
+  catch {
+    listError.value = 'Не удалось сохранить порядок'
+    await load()
+  }
+}
+
 onMounted(load)
 </script>
 
@@ -125,9 +151,16 @@ onMounted(load)
     Товаров пока нет — добавь первый.
   </p>
 
-  <v-table v-else>
+  <template v-else>
+    <p class="text-caption text-medium-emphasis mb-2">
+      Перетаскивай строки за ручку <v-icon size="small">mdi-drag</v-icon>, чтобы менять
+      порядок товаров в каталоге.
+    </p>
+
+    <v-table>
     <thead>
       <tr>
+        <th />
         <th>Фото</th>
         <th>Название</th>
         <th>Цена</th>
@@ -138,7 +171,18 @@ onMounted(load)
       </tr>
     </thead>
     <tbody>
-      <tr v-for="p in products" :key="p.id">
+      <tr
+        v-for="(p, i) in products"
+        :key="p.id"
+        draggable="true"
+        :class="{ 'drag-source': dragIndex === i }"
+        @dragstart="onDragStart(i)"
+        @dragover.prevent
+        @drop="onDrop(i)"
+      >
+        <td class="drag-handle text-medium-emphasis">
+          <v-icon>mdi-drag</v-icon>
+        </td>
         <td>
           <v-avatar v-if="p.image_url" size="40" rounded>
             <v-img :src="p.image_url" :alt="p.name" cover />
@@ -175,7 +219,8 @@ onMounted(load)
         </td>
       </tr>
     </tbody>
-  </v-table>
+    </v-table>
+  </template>
 
   <v-dialog v-model="dialog" max-width="520">
     <v-card>
@@ -249,3 +294,14 @@ onMounted(load)
     </v-card>
   </v-dialog>
 </template>
+
+<style scoped>
+.drag-handle {
+  cursor: grab;
+  width: 1%;
+}
+
+.drag-source {
+  opacity: 0.4;
+}
+</style>

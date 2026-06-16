@@ -19,6 +19,7 @@ from app.schemas import (
     PlantingUpdate,
     ProductCreate,
     ProductOut,
+    ProductReorder,
     ProductUpdate,
 )
 
@@ -105,6 +106,24 @@ async def create_product(
     await session.commit()
     await session.refresh(product)
     return product
+
+
+@router.put("/products/reorder", response_model=list[ProductOut])
+async def reorder_products(
+    data: ProductReorder, session: AsyncSession = Depends(get_session)
+) -> list[Product]:
+    """Принимает id товаров в желаемом порядке и проставляет sort_order по индексу."""
+    position = {pid: i for i, pid in enumerate(data.ids)}
+    result = await session.execute(
+        select(Product).where(Product.id.in_(position))
+    )
+    for product in result.scalars():
+        product.sort_order = position[product.id]
+    await session.commit()
+    ordered = await session.execute(
+        select(Product).order_by(Product.sort_order, Product.id)
+    )
+    return list(ordered.scalars().all())
 
 
 @router.patch("/products/{product_id}", response_model=ProductOut)

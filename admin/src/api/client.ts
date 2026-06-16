@@ -74,6 +74,11 @@ export async function deleteProduct(id: number): Promise<void> {
   await api.delete(`/admin/products/${id}`)
 }
 
+export async function reorderProducts(ids: number[]): Promise<Product[]> {
+  const { data } = await api.put<Product[]>('/admin/products/reorder', { ids })
+  return data
+}
+
 export async function fetchPlantings(): Promise<Planting[]> {
   const { data } = await api.get<Planting[]>('/admin/plantings')
   return data
