@@ -36,10 +36,13 @@ async def seed_admin() -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await seed_admin()
-    scheduler = AsyncIOScheduler(timezone=ZoneInfo(settings.digest_tz))
+    # tz передаём прямо в триггер: готовый CronTrigger без неё берёт локальную зону
+    # контейнера (UTC), а не зону шедулера — из-за этого дайджест уходил в UTC.
+    tz = ZoneInfo(settings.digest_tz)
+    scheduler = AsyncIOScheduler(timezone=tz)
     scheduler.add_job(
         send_daily_digest,
-        CronTrigger(hour=settings.digest_hour, minute=0),
+        CronTrigger(hour=settings.digest_hour, minute=0, timezone=tz),
     )
     scheduler.start()
     try:
