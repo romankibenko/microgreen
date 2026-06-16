@@ -88,7 +88,9 @@ async def list_all_products(
     session: AsyncSession = Depends(get_session),
 ) -> list[Product]:
     # в отличие от публичного каталога — отдаём и неактивные товары
-    result = await session.execute(select(Product).order_by(Product.id))
+    result = await session.execute(
+        select(Product).order_by(Product.sort_order, Product.id)
+    )
     return list(result.scalars().all())
 
 

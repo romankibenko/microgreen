@@ -14,7 +14,9 @@ async def list_products(
     session: AsyncSession = Depends(get_session),
 ) -> list[Product]:
     result = await session.execute(
-        select(Product).where(Product.is_active.is_(True)).order_by(Product.id)
+        select(Product)
+        .where(Product.is_active.is_(True))
+        .order_by(Product.sort_order, Product.id)
     )
     return list(result.scalars().all())
 

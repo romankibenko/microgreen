@@ -13,6 +13,7 @@ class ProductCreate(BaseModel):
     unit: str | None = Field(default=None, max_length=40)
     image_url: str | None = Field(default=None, max_length=500)
     is_active: bool = True
+    sort_order: int = 0
     stock: int = Field(ge=0, default=0)
 
 
@@ -23,6 +24,7 @@ class ProductUpdate(BaseModel):
     unit: str | None = Field(default=None, max_length=40)
     image_url: str | None = Field(default=None, max_length=500)
     is_active: bool | None = None
+    sort_order: int | None = None
     stock: int | None = Field(default=None, ge=0)
 
 
@@ -36,6 +38,7 @@ class ProductOut(BaseModel):
     unit: str | None
     image_url: str | None
     is_active: bool
+    sort_order: int
     stock: int
     created_at: datetime
 

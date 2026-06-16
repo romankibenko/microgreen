@@ -39,6 +39,8 @@ class Product(Base):
     unit: Mapped[str | None] = mapped_column(String(40), default=None)
     image_url: Mapped[str | None] = mapped_column(String(500), default=None)
     is_active: Mapped[bool] = mapped_column(default=True)
+    # порядок вывода в каталоге: меньше — выше; при равенстве — по id
+    sort_order: Mapped[int] = mapped_column(default=0)
     # наличие в лотках, готовых к продаже; пополняется при сборе партии
     stock: Mapped[int] = mapped_column(default=0)
     created_at: Mapped[datetime] = mapped_column(
