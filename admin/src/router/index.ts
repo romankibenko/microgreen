@@ -26,6 +26,11 @@ export const router = createRouter({
       name: 'plantings',
       component: () => import('@/views/PlantingsView.vue'),
     },
+    {
+      path: '/reference',
+      name: 'reference',
+      component: () => import('@/views/ReferenceView.vue'),
+    },
   ],
 })
 

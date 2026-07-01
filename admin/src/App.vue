@@ -23,6 +23,7 @@ function logout(): void {
         <v-btn variant="text" :to="{ name: 'orders' }">Заказы</v-btn>
         <v-btn variant="text" :to="{ name: 'products' }">Товары</v-btn>
         <v-btn variant="text" :to="{ name: 'plantings' }">Посадки</v-btn>
+        <v-btn variant="text" :to="{ name: 'reference' }">Справочник</v-btn>
         <v-btn variant="text" prepend-icon="mdi-logout" @click="logout">Выйти</v-btn>
       </v-app-bar>
 
