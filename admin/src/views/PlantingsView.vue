@@ -115,6 +115,33 @@ const productItems = computed(() =>
   products.value.map((p) => ({ title: p.name, value: p.id })),
 )
 
+// сводка собранных лотков по месяцам: на сайт / себе / всего, свежие сверху
+const monthlySummary = computed(() => {
+  const byMonth = new Map<string, { site: number; self: number; total: number }>()
+  for (const p of plantings.value) {
+    if (!p.harvested_at || p.harvested_qty === null) continue
+    const key = p.harvested_at.slice(0, 7) // YYYY-MM
+    const site = p.harvested_to_site ?? p.harvested_qty
+    const acc = byMonth.get(key) ?? { site: 0, self: 0, total: 0 }
+    acc.site += site
+    acc.self += p.harvested_qty - site
+    acc.total += p.harvested_qty
+    byMonth.set(key, acc)
+  }
+  return [...byMonth.entries()]
+    .sort((a, b) => b[0].localeCompare(a[0]))
+    .map(([month, v]) => ({ month, ...v }))
+})
+
+function formatMonth(ym: string): string {
+  const [y, m] = ym.split('-').map(Number)
+  const label = new Date(y, m - 1, 1).toLocaleDateString('ru-RU', {
+    month: 'long',
+    year: 'numeric',
+  })
+  return label.charAt(0).toUpperCase() + label.slice(1)
+}
+
 function openHarvest(p: Planting): void {
   harvestId.value = p.id
   harvestProductId.value = p.product_id
@@ -185,6 +212,31 @@ onMounted(load)
 
 <template>
   <h1 class="text-h5 font-display mb-6">Журнал посадок</h1>
+
+  <v-card class="pa-4 mb-6" elevation="2">
+    <div class="text-subtitle-2 mb-3">Сбор по месяцам</div>
+    <p v-if="monthlySummary.length === 0" class="text-body-2 text-medium-emphasis">
+      Пока ничего не собрано — сводка появится после первого сбора.
+    </p>
+    <v-table v-else density="compact">
+      <thead>
+        <tr>
+          <th>Месяц</th>
+          <th class="text-right">На сайт</th>
+          <th class="text-right">Себе</th>
+          <th class="text-right">Всего</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="m in monthlySummary" :key="m.month">
+          <td>{{ formatMonth(m.month) }}</td>
+          <td class="text-right">{{ m.site }}</td>
+          <td class="text-right">{{ m.self }}</td>
+          <td class="text-right font-weight-medium">{{ m.total }}</td>
+        </tr>
+      </tbody>
+    </v-table>
+  </v-card>
 
   <v-card class="pa-4 mb-6" elevation="2">
     <div class="text-subtitle-2 mb-3">Новая посадка</div>
