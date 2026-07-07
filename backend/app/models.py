@@ -129,6 +129,11 @@ class Planting(Base):
             "harvested_qty IS NULL OR harvested_qty > 0",
             name="ck_plantings_harvested_qty_positive",
         ),
+        CheckConstraint(
+            "harvested_to_site IS NULL "
+            "OR (harvested_to_site >= 0 AND harvested_to_site <= harvested_qty)",
+            name="ck_plantings_harvested_to_site_valid",
+        ),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -141,6 +146,8 @@ class Planting(Base):
     shade_days: Mapped[int] = mapped_column(default=3)
     trays: Mapped[int] = mapped_column(default=1)
     note: Mapped[str | None] = mapped_column(Text, default=None)
-    # сбор: дата и сколько лотков получено (зачислено в наличие товара)
+    # сбор: дата и сколько лотков получено всего (весь урожай партии)
     harvested_at: Mapped[date | None] = mapped_column(default=None)
     harvested_qty: Mapped[int | None] = mapped_column(default=None)
+    # из них зачислено в наличие товара на сайте; остальное — себе
+    harvested_to_site: Mapped[int | None] = mapped_column(default=None)

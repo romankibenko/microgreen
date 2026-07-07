@@ -57,11 +57,13 @@ export interface Planting {
   stage: PlantingStage
   harvested_at: string | null
   harvested_qty: number | null
+  harvested_to_site: number | null
 }
 
 export interface HarvestPayload {
   product_id: number
   qty: number
+  to_site: number
 }
 
 export interface PlantingPayload {

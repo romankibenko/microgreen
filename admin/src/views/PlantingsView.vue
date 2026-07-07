@@ -32,6 +32,7 @@ const harvestDialog = ref(false)
 const harvestId = ref<number | null>(null)
 const harvestProductId = ref<number | null>(null)
 const harvestQty = ref<number | null>(null)
+const harvestToSite = ref<number | null>(null)
 const harvesting = ref(false)
 const harvestError = ref<string | null>(null)
 
@@ -118,13 +119,29 @@ function openHarvest(p: Planting): void {
   harvestId.value = p.id
   harvestProductId.value = p.product_id
   harvestQty.value = p.trays
+  harvestToSite.value = p.trays
   harvestError.value = null
   harvestDialog.value = true
 }
 
+// сколько лотков этой партии остаётся себе (не идёт на сайт)
+const harvestForSelf = computed(() => {
+  const total = harvestQty.value ?? 0
+  const site = harvestToSite.value ?? 0
+  return Math.max(0, total - site)
+})
+
 async function doHarvest(): Promise<void> {
   if (!harvestProductId.value || !harvestQty.value) {
     harvestError.value = 'Выбери товар и укажи кол-во лотков'
+    return
+  }
+  if (harvestToSite.value === null || harvestToSite.value < 0) {
+    harvestError.value = 'Укажи, сколько лотков зачислить на сайт'
+    return
+  }
+  if (harvestToSite.value > harvestQty.value) {
+    harvestError.value = 'На сайт нельзя зачислить больше, чем собрано'
     return
   }
   harvesting.value = true
@@ -133,6 +150,7 @@ async function doHarvest(): Promise<void> {
     await harvestPlanting(harvestId.value!, {
       product_id: harvestProductId.value,
       qty: harvestQty.value,
+      to_site: harvestToSite.value,
     })
     harvestDialog.value = false
     await load()
@@ -143,6 +161,12 @@ async function doHarvest(): Promise<void> {
   finally {
     harvesting.value = false
   }
+}
+
+// сколько лотков собранной партии Рома забрал себе (не на сайт)
+function selfQty(p: Planting): number {
+  if (p.harvested_qty === null || p.harvested_to_site === null) return 0
+  return p.harvested_qty - p.harvested_to_site
 }
 
 function formatDate(d: string): string {
@@ -270,15 +294,22 @@ onMounted(load)
           </v-chip>
         </td>
         <td>
-          <v-chip
-            v-if="p.harvested_at"
-            color="success"
-            size="small"
-            variant="flat"
-            prepend-icon="mdi-check"
-          >
-            {{ p.harvested_qty }}
-          </v-chip>
+          <template v-if="p.harvested_at">
+            <v-chip
+              color="success"
+              size="small"
+              variant="flat"
+              prepend-icon="mdi-check"
+            >
+              {{ p.harvested_qty }}
+            </v-chip>
+            <div
+              v-if="selfQty(p) > 0"
+              class="text-caption text-medium-emphasis mt-1"
+            >
+              {{ p.harvested_to_site }} на сайт · {{ selfQty(p) }} себе
+            </div>
+          </template>
           <v-btn
             v-else
             variant="tonal"
@@ -344,13 +375,22 @@ onMounted(load)
         />
         <v-text-field
           v-model.number="harvestQty"
-          label="Лотков собрано"
+          label="Собрано всего лотков"
           type="number"
           min="1"
           hide-details
+          class="mb-2"
+        />
+        <v-text-field
+          v-model.number="harvestToSite"
+          label="Из них на сайт"
+          type="number"
+          min="0"
+          :max="harvestQty ?? undefined"
+          hide-details
         />
         <p class="text-caption text-medium-emphasis mt-2">
-          Кол-во прибавится к наличию товара на сайте.
+          На сайт прибавится {{ harvestToSite ?? 0 }} лот.<template v-if="harvestForSelf > 0">, себе — {{ harvestForSelf }} лот.</template>
         </p>
         <v-alert
           v-if="harvestError"

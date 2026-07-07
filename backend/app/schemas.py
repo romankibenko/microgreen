@@ -135,7 +135,14 @@ class PlantingUpdate(BaseModel):
 
 class HarvestRequest(BaseModel):
     product_id: int
-    qty: int = Field(gt=0)
+    qty: int = Field(gt=0)  # собрано всего лотков
+    to_site: int = Field(ge=0)  # из них зачислить на сайт; остальное — себе
+
+    @model_validator(mode="after")
+    def _to_site_within_qty(self) -> "HarvestRequest":
+        if self.to_site > self.qty:
+            raise ValueError("На сайт нельзя зачислить больше, чем собрано")
+        return self
 
 
 class PlantingOut(BaseModel):
@@ -151,6 +158,7 @@ class PlantingOut(BaseModel):
     note: str | None
     harvested_at: date | None
     harvested_qty: int | None
+    harvested_to_site: int | None
 
     @computed_field
     @property

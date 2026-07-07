@@ -220,7 +220,8 @@ async def harvest_planting(
     planting.product_id = product.id
     planting.harvested_at = date.today()
     planting.harvested_qty = data.qty
-    product.stock += data.qty
+    planting.harvested_to_site = data.to_site
+    product.stock += data.to_site
     await session.commit()
     await session.refresh(planting)
     return planting
